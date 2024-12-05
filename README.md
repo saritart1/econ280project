@@ -4,9 +4,8 @@ This Git repository contains the data and command to replicate the extension on 
 ## Contents:
 - One Stata do file: `01_defection_analysis.do`
 - Two Stata datasets: `AttanasioEtAl2011Dyadic.dta` and `AttanasioEtAl2011Vector.dta`
-- One table with the result: `marginal_effects_analysis.tex'
-- One PDF with the explanation of the extension and the table displaying the results: `econ280project.pdf'
-- : 
+- One table with the result: `marginal_effects_analysis.tex`
+- One PDF with the explanation of the extension and the table displaying the results: `econ280project.pdf`
 
 ## Instructions:
 1. Download the entire folder.
