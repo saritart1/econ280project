@@ -31,6 +31,9 @@ di "current user: `c(username)'"
 if "`c(username)'" == "sararestrepotamayo"{
 	global path "/Users/sararestrepotamayo/Documents/GitHub/econ280project"
 }
+if "`c(username)'" == "YOUR_USER_NAME"{
+	global path "YOUR_PATH_TO_FOLDER"
+}
 
 ************************************************
 **#            1. Replication                  *
