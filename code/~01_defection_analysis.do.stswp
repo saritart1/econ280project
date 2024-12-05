@@ -15,10 +15,8 @@
 *******************************************************************************/
 
 clear
-clear matrix
 set matsize 300
 set mem 500m
-set maxvar 20000
 set more off
 
 ************************************************
@@ -31,63 +29,74 @@ di "current user: `c(username)'"
 
 
 if "`c(username)'" == "sararestrepotamayo"{
-	global path "/Users/sararestrepotamayo/Dropbox/00 Phd UCSD/2024_II ECON 280 - Computation/00_replication/03_assessment"
+	global path "/Users/sararestrepotamayo/Documents/GitHub/econ280project"
 }
 
 ************************************************
 **#            1. Replication                  *
 ************************************************
 
-use AttanasioEtAl2011Dyadic.dta, clear
+use "$path/data/raw/AttanasioEtAl2011Vector.dta", clear
+
+	keep renegade female yage ysch married tcons lcons survhhsz familyoutdeg friendsoutdeg iid
+
+	tempfile vector_temp
+	save `vector_temp'	
+rename iid iida
+	tempfile vector_temp_a
+	save `vector_temp_a'	
+use `vector_temp', clear
+rename iid iidb
+	tempfile vector_temp_b
+	save `vector_temp_b'
+
+use "$path/data/raw/AttanasioEtAl2011Dyadic.dta", clear
+
+* Merging jugadora
+
+merge m:1 iida using `vector_temp_a', nogen
+
+rename (renegade female yage ysch married tcons lcons survhhsz familyoutdeg friendsoutdeg) (renegade_a female_a yage_a ysch_a married_a tcons_a lcons_a survhhsz_a familyoutdeg_a friendsoutdeg_a)
 
 
-* Load the datasets
-drop _all
-use "AttanasioEtAl2011Vector.dta", clear
+merge m:1 iidb using `vector_temp_b', nogen
 
-* Check key variables in the vector dataset
-describe
+rename (renegade female yage ysch married tcons lcons survhhsz familyoutdeg friendsoutdeg) (renegade_b female_b yage_b ysch_b married_b tcons_b lcons_b survhhsz_b familyoutdeg_b friendsoutdeg_b)
 
-* Save a temporary copy of this dataset to merge later
-save "vector_temp.dta", replace
+summarize renegade_a renegade_b female_a female_b yage_a yage_b ysch_a ysch_b
 
-* Load the dyadic dataset
-use "AttanasioEtAl2011Dyadic.dta", clear
+* Create dyadic variables (differences between jugadora and jugadorb)
+rename difyage age_diff 
+rename difysch education_diff
+gen income_diff = abs(lcons_a - lcons_b)
 
-describe
+* Summarize new variables
+summarize age_diff education_diff income_diff
 
-* Merge dyadic dataset with the vector dataset
-merge m:1 iid using "vector_temp.dta"
+*Relabelling
+label var female_a "Player A female"
+label var female_b "Player B female"
+label var income_diff "Difference in income"
+label var renegade_a "Befection Behavior"
+gen female_interaction = female_a * female_b
+label var female_interaction "Both female"
 
-* Check the merge result
-assert _merge == 3
 
-* Drop unnecessary merge indicator variable
-drop _merge
+* Clear any previous stored models
+eststo clear
 
-* Explore the defection variable in Round 2
-summarize defaultw2 renegade
+logit renegade_a difchoice1 age_diff education_diff income_diff friendfamily female_a female_b
+margins, dydx(*) // Calculate marginal effects
+eststo Naive: margins, dydx(*) // Store model 1 (Naive)
 
-* Basic descriptive statistics for key predictors
-summarize difchoice1 friendfamily difwin1 female yage ysch
+logit renegade_a difchoice1 age_diff education_diff income_diff friendfamily female_a female_b female_interaction
+margins, dydx(*) // Calculate marginal effects
+eststo GenderInteraction: margins, dydx(*) // Store model 2 (Gender Interaction)
 
-* Logistic regression for defection
-gen defection = defaultw2 if !missing(defaultw2)
+xi: logit renegade_a difchoice1 age_diff education_diff income_diff friendfamily female_a female_b female_interaction i.municode
+margins, dydx(*) // Calculate marginal effects
+eststo MunicipalityFE: margins, dydx(*) // Store model 3 (Municipality FE)
 
-logit defection difchoice1 friendfamily difwin1 female yage ysch
+* Export a properly grouped table
+esttab using "$path/results/marginal_effects_analysis.tex", replace label se star(* 0.10 ** 0.05 *** 0.01) alignment(D{.}{.}{-1}) keep(difchoice1 age_diff education_diff income_diff friendfamily female_a female_b female_interaction) varlabels(difchoice1 "Difference in Round 1 Gamble Choice" age_diff "Difference in Age" education_diff "Difference in Years of Schooling" income_diff "Difference in Income" friendfamily "One Recognised Friendship, Other Family Tie" female_a "Player A Female" female_b "Player B Female" female_interaction "Gender Interaction") collabels(Naive "Naive Specification" GenderInteraction "Gender Interaction Specification" MunicipalityFE "Municipality FE Specification") 
 
-* Interaction terms to test heterogeneous effects
-gen risk_ties = difchoice1 * friendfamily
-logit defection difchoice1 friendfamily difwin1 female yage ysch risk_ties
-
-* Robustness check with municipality fixed effects
-xi: logit defection difchoice1 friendfamily difwin1 female yage ysch i.municode
-
-* Marginal effects after the logistic regression
-margins, dydx(*)
-
-* Visualize predicted probabilities
-marginsplot
-
-* Clean up temporary files
-erase "vector_temp.dta"
