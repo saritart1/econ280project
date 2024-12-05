@@ -31,6 +31,9 @@ di "current user: `c(username)'"
 if "`c(username)'" == "sararestrepotamayo"{
 	global path "/Users/sararestrepotamayo/Documents/GitHub/econ280project"
 }
+if "`c(username)'" == "YOUR_USER_NAME"{
+	global path "YOUR_PATH_TO_FOLDER"
+}
 
 ************************************************
 **#            1. Replication                  *
@@ -98,5 +101,5 @@ margins, dydx(*) // Calculate marginal effects
 eststo MunicipalityFE: margins, dydx(*) // Store model 3 (Municipality FE)
 
 * Export a properly grouped table
-esttab using "$path/results/marginal_effects_analysis.tex", replace label se star(* 0.10 ** 0.05 *** 0.01) alignment(D{.}{.}{-1}) keep(difchoice1 age_diff education_diff income_diff friendfamily female_a female_b female_interaction) varlabels(difchoice1 "Difference in Round 1 Gamble Choice" age_diff "Difference in Age" education_diff "Difference in Years of Schooling" income_diff "Difference in Income" friendfamily "One Recognised Friendship, Other Family Tie" female_a "Player A Female" female_b "Player B Female" female_interaction "Gender Interaction") collabels(Naive "Naive Specification" GenderInteraction "Gender Interaction Specification" MunicipalityFE "Municipality FE Specification") 
+esttab using "$path/results/marginal_effects_analysis.tex", replace label se star(* 0.10 ** 0.05 *** 0.01) alignment(D{.}{.}{-1}) keep(difchoice1 age_diff education_diff income_diff friendfamily female_a female_b female_interaction) varlabels(difchoice1 "Difference in Round 1 Gamble Choice" age_diff "Difference in Age" education_diff "Difference in Years of Schooling" income_diff "Difference in Income" friendfamily "One Recognised Friendship, Other Family Tie" female_a "Player A Female" female_b "Player B Female" female_interaction "Gender Interaction") collabels(Naive "Naive Specification" GenderInteraction "Gender Interaction Specification" MunicipalityFE "Municipality FE Specification")
 
